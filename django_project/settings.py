@@ -25,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o@991ap#9j+qm15o4r1i%ivt0ojz2agp0@f7*6x58^jx04matn'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = []
+
 
 
 # Application definition
@@ -41,17 +41,23 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'whitenoise.runserver_nostatic',
-    'blog',
-    'home'
+    'django.contrib.staticfiles',    
+
+    # installed apps
+    "authenticate",
+    "stats",
+    "corsheaders",
+    "rest_framework",
+    "djoser",
+    "rest_framework_simplejwt.token_blacklist",
+    
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -78,7 +84,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_project.wsgi.application'
 
-print(os.getenv('DATABASE_URL'))
+""" print(os.getenv('DATABASE_URL'))
+print(os.getenv('SECRET_KEY'))
+print(os.getenv('DEBUG'))
+print(os.getenv('DOMAIN')) """
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -128,13 +137,46 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR,'blog/static')
-]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-ALLOWED_HOSTS = ['localhost','web-production-ce0bd.up.railway.app']
+
+ALLOWED_HOSTS = ['localhost','apistatskingsfutbol.up.railway.app','statskingsfutbol.up.railway.app',]
 
 CSRF_TRUSTED_ORIGINS = ['http://*','https://web-production-ce0bd.up.railway.app']
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://apistatskingsfutbol.up.railway.app",
+    "https://statskingsfutbol.up.railway.app",
+]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DJOSER = {
+    "PASSWORD_RESET_CONFIRM_URL": "authenticate/password/reset-password-confirmation/?uid={uid}&token={token}",
+    "ACTIVATION_URL": "#/activate/{uid}/{token}",
+    "SEND_ACTIVATION_EMAIL": False,
+    "SERIALIZERS": {
+        "user_create": "authenticate.serializers.UserCreateSerializer",
+    },
+    "LOGIN_FIELD": "email",
+}
+
+
+
+
+
+SITE_NAME = "Test Django Next.js"
+
+DOMAIN = os.getenv('DOMAIN')

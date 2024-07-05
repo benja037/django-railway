@@ -1,2 +1,1 @@
-release: python manage.py collectstatic --noinput
-web: gunicorn django_project.wsgi
+web: gunicorn django_project.wsgi --log-file -

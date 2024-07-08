@@ -143,7 +143,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ALLOWED_HOSTS = ['localhost','apistatskingsfutbol.up.railway.app','statskingsfutbol.up.railway.app',]
 
-CSRF_TRUSTED_ORIGINS = ['http://*','https://web-production-ce0bd.up.railway.app']
+CSRF_TRUSTED_ORIGINS = [
+    'https://apistatskingsfutbol.up.railway.app',
+    'https://statskingsfutbol.up.railway.app',
+]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

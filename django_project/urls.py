@@ -24,4 +24,5 @@ urlpatterns = [
     path("authenticate/", include("djoser.urls")),
     path("authenticate/", include("djoser.urls.jwt")),
     path("authenticate/logout/", LogoutView.as_view()),
+    path('stats/', include('stats.urls')),
 ]    

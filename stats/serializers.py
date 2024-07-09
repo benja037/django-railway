@@ -1,12 +1,20 @@
 from rest_framework import serializers
-from .models import Torneo, Partido, SofascoreStatsJugador, FbrefStatsJugador
+from .models import Torneo, Partido, SofascoreStatsJugador, FbrefStatsJugador, Equipo
 
 class TorneoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Torneo
         fields = '__all__'
 
+class EquipoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Equipo
+        fields = ['nombre']
+
 class PartidoSerializer(serializers.ModelSerializer):
+    equipo_local = EquipoSerializer()
+    equipo_visitante = EquipoSerializer()
+    
     class Meta:
         model = Partido
         fields = '__all__'

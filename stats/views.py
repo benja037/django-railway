@@ -29,3 +29,4 @@ class EventoDetailView(APIView):
         }
         
         return Response(response_data)
+    

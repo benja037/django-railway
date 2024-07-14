@@ -58,7 +58,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'authenticate.logging_middleware.LoggingMiddleware',
+    #'authenticate.logging_middleware.LoggingMiddleware',
     "django.middleware.common.CommonMiddleware",
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -187,7 +187,7 @@ SITE_NAME = "Test Django Next.js"
 
 DOMAIN = os.getenv('DOMAIN')
 
-LOGGING = {
+""" LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
@@ -207,3 +207,4 @@ LOGGING = {
         },
     },
 }
+ """

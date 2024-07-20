@@ -8,3 +8,5 @@ staticfiles
 stats/management/
 stats/management/commands/llenardb.py
 stats/management/commands/probando.py
+
+error_log.txt

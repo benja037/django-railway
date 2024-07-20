@@ -47,7 +47,7 @@ class HeatMapPlayerMatchAdmin(admin.ModelAdmin):
     search_fields = ('player__nombre', 'partido__id_sofascore_evento')
     list_filter = ('partido', 'player')
     list_select_related = ('player', 'partido')
-    list_per_page = 20
+    list_per_page = 200
 
 @admin.register(ManagerTeamPartido)
 class ManagerTeamPartidoAdmin(admin.ModelAdmin):

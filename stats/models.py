@@ -36,17 +36,18 @@ class Partido(models.Model):
     
 class Player(models.Model):
     sofascore_id = models.IntegerField(unique=True)
-    nombre = models.CharField(max_length=255)
-    nacionalidad = models.CharField(max_length=255)
-    posicion = models.CharField(max_length=50)
-    fecha_nacimiento = models.DateTimeField()
+    nombre = models.CharField(max_length=255, null=True, blank=True)
+    nacionalidad = models.CharField(max_length=255, null=True, blank=True)
+    posicion = models.CharField(max_length=50, null=True, blank=True)
+    fecha_nacimiento = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return self.nombre
+        return self.nombre if self.nombre else "Unknown Player"
 
 class SofascoreStatsJugador(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
+    equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE,null=True,default=None)
     numero_camiseta = models.IntegerField()
     suplente = models.BooleanField(default=False)
     total_pases = models.IntegerField(default=0)

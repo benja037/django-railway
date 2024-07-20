@@ -52,6 +52,10 @@ def timestamp_to_date(timestamp):
     day = dt.strftime('%d').lstrip('0')
     return dt.strftime(f'%B-{day}-%Y')
 
+def log_error(message):
+    with open("error_log.txt", "a") as file:
+        file.write(message + "\n")
+
 def normalize_text(text):
     text = unicodedata.normalize('NFKD', text).encode('ASCII', 'ignore').decode('ASCII')
     return text.lower().replace(" ", "-")
@@ -154,15 +158,16 @@ def get_or_create_player(sofascore_id, nombre, nacionalidad, posicion, fecha_nac
     player, created = Player.objects.get_or_create(
         sofascore_id=sofascore_id,
         defaults={
-            'nombre': nombre,
-            'nacionalidad': nacionalidad,
-            'posicion': posicion,
-            'fecha_nacimiento': datetime.fromtimestamp(fecha_nacimiento)
+            'nombre': nombre if nombre else 'Desconocido',
+            'nacionalidad': nacionalidad if nacionalidad else 'Desconocido',
+            'posicion': posicion if posicion else 'Desconocida',
+            'fecha_nacimiento': datetime.fromtimestamp(fecha_nacimiento) if fecha_nacimiento else None
         }
     )
     if created:
         print(f"Jugador creado: {nombre} (ID: {sofascore_id})")
     return player
+
 
 def heatmapPlayerToDatabase(evento_id, player_id):
     response_heat = requests.get(f'https://api.sofascore.com/api/v1/event/{evento_id}/player/{player_id}/heatmap')
@@ -209,23 +214,36 @@ def retrieveDataLineupsSofascore(evento):
     response = requests.get(f'https://api.sofascore.com/api/v1/event/{evento["id_evento"]}/lineups')
     if response.status_code == 200:
         players_stats = response.json()
-        sofascore_teams_of_events = [players_stats['home'], players_stats['away']]
-        partido = Partido.objects.get(id_sofascore_evento=evento['id_evento'])        
-        for team_lineup in sofascore_teams_of_events:
+        sofascore_teams_of_events = ['home', 'away']
+        partido = Partido.objects.get(id_sofascore_evento=evento['id_evento'])
+        
+        home_team = Equipo.objects.get(sofascore_id=evento['Equipo Local Id'])
+        away_team = Equipo.objects.get(sofascore_id=evento['Equipo Visitante Id'])
+        
+        for team in sofascore_teams_of_events:
+            team_lineup = players_stats[team]
+            equipo_obj = home_team if team == 'home' else away_team
             for player_info in team_lineup['players']:    
                 player = player_info['player']
+                print(player)
                 try:
+                    nombre = player.get('name', 'Desconocido')
+                    nacionalidad = player['country'].get('name', 'Desconocido') if 'country' in player else 'Desconocido'
+                    posicion = player.get('position', 'Desconocida')
+                    fecha_nacimiento = player.get('dateOfBirthTimestamp')
+                    
                     player_obj = get_or_create_player(
                         player['id'],
-                        player['name'],
-                        player['country']['name'],
-                        player['position'],
-                        player['dateOfBirthTimestamp']
+                        nombre,
+                        nacionalidad,
+                        posicion,
+                        fecha_nacimiento
                     )
                     heatmapPlayerToDatabase(evento["id_evento"], player['id'])
                     player_data = {
                         "player": player_obj,
                         "partido": partido,
+                        "equipo": equipo_obj,
                         "numero_camiseta": player_info.get('shirtNumber', 0),
                         "suplente": player_info.get('substitute', False),
                         "total_pases": player_info['statistics'].get('totalPass', 0),
@@ -280,8 +298,11 @@ def retrieveDataLineupsSofascore(evento):
 
                     SofascoreStatsJugador.objects.create(**player_data)
                     time.sleep(2)
-                except:
-                    pass
+                except Exception as e:
+                    error_message = f"Error processing player {player['name']} evento: {evento['id_evento']}: {e}"
+                    print(error_message)
+                    log_error(error_message)
+
 
 def retrieveDataLineUpFbref(evento,scraper):
     match_stats = scraper.scrape_match(evento['enlace'])
@@ -289,16 +310,20 @@ def retrieveDataLineUpFbref(evento,scraper):
     sfbref_teams_of_events = [match_stats["Away Player Stats"][0], match_stats["Home Player Stats"][0]]
     for team in sfbref_teams_of_events:
         df3 = team
+        #print(df3)
         fbref_match_stats_away = df3["Summary"].values[0]
         
         fbref_match_stats_away.columns = [col[-1] for col in fbref_match_stats_away.columns.values]
         fbref_match_stats_away.rename(columns={fbref_match_stats_away.columns[-1]: 'Player ID'}, inplace=True)
-
+        print("DF STATS JUGADORES",fbref_match_stats_away)
         for index, row in fbref_match_stats_away.iterrows():
-            try:                
+            try:   
+                print("ROOOOW",row)             
                 numero_camiseta = int(row['#']) if pd.notnull(row['#']) else None
-                sofascore_stat = SofascoreStatsJugador.objects.get(partido=partido, numero_camiseta=numero_camiseta)            
+                sofascore_stat = SofascoreStatsJugador.objects.get(partido=partido, numero_camiseta=numero_camiseta)   
+                print("Número camiseta:",numero_camiseta)         
                 player = sofascore_stat.player
+                print("Player",player)
 
                 FbrefStatsJugador.objects.create(
                     player=player,
@@ -328,11 +353,18 @@ def retrieveDataLineUpFbref(evento,scraper):
                     fbref_player_id=row['Player ID']
                 )
             except SofascoreStatsJugador.DoesNotExist:
-                print(f"Estadística de jugador no encontrada para el partido {evento['id_evento']} y camiseta {row['#']}")
+                error_message = f"Estadística Sofascore de jugador no encontrada para el partido {evento['id_evento']} y camiseta {row['#']}"
+                print(error_message)
+                log_error(error_message)
             except Partido.DoesNotExist:
-                print(f"Partido con ID {evento['id_evento']} no encontrado")
+                error_message = f"Partido con ID {evento['id_evento']} no encontrado"
+                print(error_message)
+                log_error(error_message)
             except Exception as e:
-                print(f"Error al guardar las estadísticas del jugador: {e}")
+                error_message = f"Error al guardar las estadísticas del jugador: {e}"
+                print(error_message)
+                log_error(error_message)
+
 
 class Command(BaseCommand):
     help = 'Llena la base de datos con datos iniciales'
@@ -354,10 +386,15 @@ class Command(BaseCommand):
                 partidos.append(event_info)
 
         partidos_con_enlaces, enlaces_sin_partido = encontrar_enlaces(partidos, links_campeonato_nacional)
-
+        #limite = 0
         for evento in partidos_con_enlaces:
-            eventInfoToDatabase(evento)     
+            """ if (limite>0):
+                break """
+
+            #eventInfoToDatabase(evento)   
+              
             time.sleep(2)       
             retrieveDataLineupsSofascore(evento)
-            retrieveDataLineUpFbref(evento,scraper)
-            managersToDatabase(evento)
+            #retrieveDataLineUpFbref(evento,scraper)
+            #managersToDatabase(evento)
+            #limite = limite + 1

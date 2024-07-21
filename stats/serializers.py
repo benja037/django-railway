@@ -9,7 +9,7 @@ class TorneoSerializer(serializers.ModelSerializer):
 class EquipoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Equipo
-        fields = ['nombre']
+        fields = ['nombre','id']
 
 class PlayerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,6 +26,8 @@ class PartidoSerializer(serializers.ModelSerializer):
 
 class SofascoreStatsJugadorSerializer(serializers.ModelSerializer):
     player = PlayerSerializer()
+    equipo = EquipoSerializer()
+    
 
     class Meta:
         model = SofascoreStatsJugador

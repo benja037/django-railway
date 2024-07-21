@@ -21,8 +21,8 @@ class EventoDetailView(APIView):
         sofascore_stats = SofascoreStatsJugador.objects.filter(partido=partido)
         fbref_stats = FbrefStatsJugador.objects.filter(partido=partido)
         
-        sofascore_stats_local = SofascoreStatsJugador.objects.filter(partido=partido, player__equipo=partido.equipo_local)
-        sofascore_stats_visitante = SofascoreStatsJugador.objects.filter(partido=partido, player__equipo=partido.equipo_visitante)
+        sofascore_stats_local = SofascoreStatsJugador.objects.filter(partido=partido, equipo=partido.equipo_local)
+        sofascore_stats_visitante = SofascoreStatsJugador.objects.filter(partido=partido, equipo=partido.equipo_visitante)
 
         response_data = {
             "equipo_local": partido.equipo_local.nombre,

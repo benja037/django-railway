@@ -39,8 +39,8 @@ class EventoDetailView(APIView):
             "equipo_visitante": partido.equipo_visitante.nombre,
             "puntuacion_local": partido.puntuacion_local,
             "puntuacion_visitante": partido.puntuacion_visitante,
-            "sofascore_stats_local": combined_stats_local,
-            "sofascore_stats_visitante": combined_stats_visitante,
+            "combinated_stats_local": combined_stats_local,
+            "combinated_stats_visitante": combined_stats_visitante,
         }
         
         return Response(response_data)

@@ -304,53 +304,61 @@ def retrieveDataLineupsSofascore(evento):
                     log_error(error_message)
 
 
-def retrieveDataLineUpFbref(evento,scraper):
+def retrieveDataLineUpFbref(evento, scraper):
     match_stats = scraper.scrape_match(evento['enlace'])
-    partido = Partido.objects.get(id_sofascore_evento=evento['id_evento'])    
-    sfbref_teams_of_events = [match_stats["Away Player Stats"][0], match_stats["Home Player Stats"][0]]
-    for team in sfbref_teams_of_events:
-        df3 = team
-        #print(df3)
+    partido = Partido.objects.get(id_sofascore_evento=evento['id_evento'])   
+    home_team = Equipo.objects.get(sofascore_id=evento['Equipo Local Id'])
+    away_team = Equipo.objects.get(sofascore_id=evento['Equipo Visitante Id']) 
+    fbref_teams_of_events = ['Home Player Stats', 'Away Player Stats']
+    
+    for team in fbref_teams_of_events:
+        df3 = match_stats[team][0]
+        equipo_obj = home_team if team == 'Home Player Stats' else away_team
+        
         fbref_match_stats_away = df3["Summary"].values[0]
         
         fbref_match_stats_away.columns = [col[-1] for col in fbref_match_stats_away.columns.values]
         fbref_match_stats_away.rename(columns={fbref_match_stats_away.columns[-1]: 'Player ID'}, inplace=True)
-        print("DF STATS JUGADORES",fbref_match_stats_away)
+        print("DF STATS JUGADORES", fbref_match_stats_away)
         for index, row in fbref_match_stats_away.iterrows():
             try:   
-                print("ROOOOW",row)             
+                print("ROOOOW", row)
                 numero_camiseta = int(row['#']) if pd.notnull(row['#']) else None
-                sofascore_stat = SofascoreStatsJugador.objects.get(partido=partido, numero_camiseta=numero_camiseta)   
-                print("Número camiseta:",numero_camiseta)         
+                if pd.isna(row['#']):
+                    continue  # Skip to the next iteration if 'row['#']' is NaN
+
+                sofascore_stat = SofascoreStatsJugador.objects.get(partido=partido, numero_camiseta=numero_camiseta, equipo=equipo_obj)   
+                print("Número camiseta:", numero_camiseta, "EQUIPO", equipo_obj)
                 player = sofascore_stat.player
-                print("Player",player)
+                print("Player", player)
 
                 FbrefStatsJugador.objects.create(
                     player=player,
                     partido=partido,
-                    numero_camiseta=row['#'],
-                    Min=row['Min'],
-                    Gls=row['Gls'],
-                    Ast=row['Ast'],
-                    Sh=row['Sh'],
-                    SoT=row['SoT'],
-                    CrdY=row['CrdY'],
-                    CrdR=row['CrdR'],
-                    Fls=row['Fls'],
-                    Fld=row['Fld'],
-                    Off=row['Off'],
-                    Crs=row['Crs'],
-                    TklW=row['TklW'],
-                    Int=row['Int'],
-                    OG=row['OG'],
-                    PKatt=row['PKatt'],
-                    PKwon=row['PKwon'],
-                    PK=row['PK'],
-                    PKcon=row['PKcon'],
-                    Pos=row['Pos'],
-                    edad_dia_partido=row['Age'],
-                    nation=row['Nation'],
-                    fbref_player_id=row['Player ID']
+                    equipo=equipo_obj,
+                    numero_camiseta=row.get('#', None),
+                    Min=row.get('Min', None),
+                    Gls=row.get('Gls', None),
+                    Ast=row.get('Ast', None),
+                    Sh=row.get('Sh', None),
+                    SoT=row.get('SoT', None),
+                    CrdY=row.get('CrdY', None),
+                    CrdR=row.get('CrdR', None),
+                    Fls=row.get('Fls', None),
+                    Fld=row.get('Fld', None),
+                    Off=row.get('Off', None),
+                    Crs=row.get('Crs', None),
+                    TklW=row.get('TklW', None),
+                    Int=row.get('Int', None),
+                    OG=row.get('OG', None),
+                    PKatt=row.get('PKatt', None),
+                    PKwon=row.get('PKwon', None),
+                    PK=row.get('PK', None),
+                    PKcon=row.get('PKcon', None),
+                    Pos=row.get('Pos', None),
+                    edad_dia_partido=row.get('Age', None),
+                    nation=row.get('Nation', None),
+                    fbref_player_id=row.get('Player ID', None)
                 )
             except SofascoreStatsJugador.DoesNotExist:
                 error_message = f"Estadística Sofascore de jugador no encontrada para el partido {evento['id_evento']} y camiseta {row['#']}"
@@ -386,15 +394,15 @@ class Command(BaseCommand):
                 partidos.append(event_info)
 
         partidos_con_enlaces, enlaces_sin_partido = encontrar_enlaces(partidos, links_campeonato_nacional)
-        #limite = 0
+        limite = 0
         for evento in partidos_con_enlaces:
-            """ if (limite>0):
-                break """
+            if (limite>0):
+                break 
 
             #eventInfoToDatabase(evento)   
               
             time.sleep(2)       
-            retrieveDataLineupsSofascore(evento)
-            #retrieveDataLineUpFbref(evento,scraper)
+            #retrieveDataLineupsSofascore(evento)
+            retrieveDataLineUpFbref(evento,scraper)
             #managersToDatabase(evento)
-            #limite = limite + 1
+            limite = limite + 1

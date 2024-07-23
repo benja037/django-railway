@@ -106,29 +106,33 @@ class SofascoreStatsJugador(models.Model):
 class FbrefStatsJugador(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     partido = models.ForeignKey(Partido, on_delete=models.CASCADE)
-    numero_camiseta = models.IntegerField()
-    Min = models.IntegerField()
-    Gls = models.IntegerField()
-    Ast = models.IntegerField()
-    Sh = models.IntegerField()
-    SoT = models.IntegerField()
-    CrdY = models.IntegerField()
-    CrdR = models.IntegerField()
-    Fls = models.IntegerField()
-    Fld = models.IntegerField()
-    Off = models.IntegerField()
-    Crs = models.IntegerField()
-    TklW = models.IntegerField()
-    Int = models.IntegerField()
-    OG = models.IntegerField()
-    PKatt = models.IntegerField()
-    PKwon = models.IntegerField()
-    PK = models.IntegerField()
-    PKcon = models.IntegerField()
-    Pos = models.CharField(max_length=10)
-    edad_dia_partido = models.CharField(max_length=20)
-    nation = models.CharField(max_length=10)  # Añadido Nation
-    fbref_player_id = models.CharField(max_length=100)  # Añadido Player ID
+    equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE,null=True,default=None)
+    numero_camiseta = models.IntegerField(null=True, blank=True)
+    Min = models.IntegerField(null=True, blank=True)
+    Gls = models.IntegerField(null=True, blank=True)
+    Ast = models.IntegerField(null=True, blank=True)
+    Sh = models.IntegerField(null=True, blank=True)
+    SoT = models.IntegerField(null=True, blank=True)
+    CrdY = models.IntegerField(null=True, blank=True)
+    CrdR = models.IntegerField(null=True, blank=True)
+    Fls = models.IntegerField(null=True, blank=True)
+    Fld = models.IntegerField(null=True, blank=True)
+    Off = models.IntegerField(null=True, blank=True)
+    Crs = models.IntegerField(null=True, blank=True)
+    TklW = models.IntegerField(null=True, blank=True)
+    Int = models.IntegerField(null=True, blank=True)
+    OG = models.IntegerField(null=True, blank=True)
+    PKatt = models.IntegerField(null=True, blank=True)
+    PKwon = models.IntegerField(null=True, blank=True)
+    PK = models.IntegerField(null=True, blank=True)
+    PKcon = models.IntegerField(null=True, blank=True)
+    Pos = models.CharField(max_length=10, null=True, blank=True)
+    edad_dia_partido = models.CharField(max_length=20, null=True, blank=True)
+    nation = models.CharField(max_length=10, null=True, blank=True)  # Añadido Nation
+    fbref_player_id = models.CharField(max_length=100, null=True, blank=True)  # Añadido Player ID
+
+    def __str__(self):
+        return f'{self.player} - {self.partido}'
 
 class HeatMapPlayerMatch(models.Model):
     id = models.AutoField(primary_key=True)

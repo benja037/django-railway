@@ -133,28 +133,29 @@ class EventoDetailView(APIView):
         return combined_stats
 
 class JugadoresStatsView(APIView):
-    def get(self, request, torneo_id):        
+    def get(self, request):
         sofascore_stats = SofascoreStatsJugador.objects.all()
         fbref_stats = FbrefStatsJugador.objects.all()
-        
+
         sofascore_data = SofascoreStatsJugadorSerializer(sofascore_stats, many=True).data
         fbref_data = FbrefStatsJugadorSerializer(fbref_stats, many=True).data
-        
+
         combined_stats = self.combine_stats(sofascore_data, fbref_data)
-        
+
         return Response(combined_stats)
 
     def combine_stats(self, sofascore_data, fbref_data):
-        fbref_dict = {stat['player']: stat for stat in fbref_data}
-        
+        fbref_dict = {stat['player']['id']: stat for stat in fbref_data}
+
         combined_stats = []
         for sofascore_stat in sofascore_data:
-            player_id = sofascore_stat['player']
+            player_id = sofascore_stat['player']['id']
             fbref_stat = fbref_dict.get(player_id)
-            
-            combined_stats.append({
-                **sofascore_stat,
-                **{k: fbref_stat.get(k) for k in fbref_stat.keys() if k not in sofascore_stat}
-            })
-        
+
+            combined_stat = {**sofascore_stat}
+            if fbref_stat:
+                combined_stat.update({k: fbref_stat.get(k) for k in fbref_stat.keys() if k not in sofascore_stat})
+
+            combined_stats.append(combined_stat)
+
         return combined_stats

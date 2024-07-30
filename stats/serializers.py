@@ -34,6 +34,8 @@ class SofascoreStatsJugadorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class FbrefStatsJugadorSerializer(serializers.ModelSerializer):
+    player = PlayerSerializer()
+    equipo = EquipoSerializer()
     class Meta:
         model = FbrefStatsJugador
         fields = '__all__'

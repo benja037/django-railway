@@ -5,5 +5,5 @@ urlpatterns = [
     path('torneos/', TorneosListView.as_view(), name='torneos-list'),
     path('torneo/<int:torneo_id>/partidos/', PartidosListView.as_view(), name='torneo-partidos-list'),
     path('evento/<int:evento_id>/', EventoDetailView.as_view(), name='evento-detail'),
-    path('torneo/<int:torneo_id>/jugadores_stats/', JugadoresStatsView.as_view(), name='jugadores-stats')
+    path('jugadores-stats/', JugadoresStatsView.as_view(), name='jugadores-stats'),
 ]

@@ -134,28 +134,46 @@ class EventoDetailView(APIView):
 
 class JugadoresStatsView(APIView):
     def get(self, request):
-        sofascore_stats = SofascoreStatsJugador.objects.all()
-        fbref_stats = FbrefStatsJugador.objects.all()
+        try:
+            partidos = Partido.objects.all()
+            combined_stats = []
 
-        sofascore_data = SofascoreStatsJugadorSerializer(sofascore_stats, many=True).data
-        fbref_data = FbrefStatsJugadorSerializer(fbref_stats, many=True).data
+            for partido in partidos:
+                fbref_stats = FbrefStatsJugador.objects.filter(partido=partido)
+                sofascore_stats_local = SofascoreStatsJugador.objects.filter(partido=partido, equipo=partido.equipo_local)
+                sofascore_stats_visitante = SofascoreStatsJugador.objects.filter(partido=partido, equipo=partido.equipo_visitante)
 
-        combined_stats = self.combine_stats(sofascore_data, fbref_data)
+                fbref_stats_local = fbref_stats.filter(equipo=partido.equipo_local)
+                fbref_stats_visitante = fbref_stats.filter(equipo=partido.equipo_visitante)
 
-        return Response(combined_stats)
+                combined_stats_local = self.combine_stats(sofascore_stats_local, fbref_stats_local)
+                combined_stats_visitante = self.combine_stats(sofascore_stats_visitante, fbref_stats_visitante)
 
-    def combine_stats(self, sofascore_data, fbref_data):
-        fbref_dict = {stat['player']['id']: stat for stat in fbref_data}
+                combined_stats.extend(combined_stats_local)
+                combined_stats.extend(combined_stats_visitante)
 
-        combined_stats = []
-        for sofascore_stat in sofascore_data:
-            player_id = sofascore_stat['player']['id']
-            fbref_stat = fbref_dict.get(player_id)
+            return Response(combined_stats)
+        except Exception as e:
+            print(f"Error: {e}")
+            return Response({"error": str(e)}, status=500)
 
-            combined_stat = {**sofascore_stat}
-            if fbref_stat:
-                combined_stat.update({k: fbref_stat.get(k) for k in fbref_stat.keys() if k not in sofascore_stat})
-
-            combined_stats.append(combined_stat)
-
-        return combined_stats
+    def combine_stats(self, sofascore_stats, fbref_stats):
+        try:
+            fbref_dict = {stat.player.id: stat for stat in fbref_stats}
+            
+            combined_stats = []
+            for sofascore_stat in sofascore_stats:
+                player_id = sofascore_stat.player.id
+                fbref_stat = fbref_dict.get(player_id)
+                
+                combined_stat = SofascoreStatsJugadorSerializer(sofascore_stat).data
+                if fbref_stat:
+                    fbref_stat_serialized = FbrefStatsJugadorSerializer(fbref_stat).data
+                    combined_stat.update({k: fbref_stat_serialized.get(k) for k in fbref_stat_serialized.keys() if k not in combined_stat})
+                
+                combined_stats.append(combined_stat)
+            
+            return combined_stats
+        except Exception as e:
+            print(f"Error in combine_stats: {e}")
+            raise e

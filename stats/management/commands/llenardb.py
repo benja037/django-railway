@@ -395,10 +395,10 @@ class Command(BaseCommand):
                 partidos.append(event_info)
 
         partidos_con_enlaces, enlaces_sin_partido = encontrar_enlaces(partidos, links_campeonato_nacional)
-        limite = 0
+        #limite = 0
         for evento in partidos_con_enlaces:
-            if (limite>0):
-                break 
+            """ if (limite>0):
+                break  """
 
             #eventInfoToDatabase(evento)   
               
@@ -406,4 +406,4 @@ class Command(BaseCommand):
             #retrieveDataLineupsSofascore(evento)
             retrieveDataLineUpFbref(evento,scraper)
             #managersToDatabase(evento)
-            limite = limite + 1
+            #limite = limite + 1
